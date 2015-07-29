@@ -60,7 +60,7 @@ def index():
 if __name__ == '__main__':
     admin = flask_admin.Admin(
         app,
-        'Example: Auth', template_mode='bootstap3')
+        'Example: Auth')
 
     # Add view
     admin.add_view(MyModelView(User))
