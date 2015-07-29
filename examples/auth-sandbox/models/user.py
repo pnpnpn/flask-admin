@@ -12,7 +12,7 @@ class Role(FDocument, RoleMixin):
 
 class User(FDocument, UserMixin):
     email = StringField(max_length=120, required=True, unique=True)
-    password = StringField(max_length=64)
+    password = StringField(max_length=255)
     roles = ListField(ReferenceField(Role), default=[])
     active = BooleanField(default=True)
     confirmed_at = DateTimeField()

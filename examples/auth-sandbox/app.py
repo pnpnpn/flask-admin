@@ -1,6 +1,7 @@
 from flask import Flask, url_for, redirect, render_template, request
 from models.user import User, Role
-from flask.ext.security import Security, MongoEngineUserDatastore, login_required, current_user
+from flask_security import Security, MongoEngineUserDatastore, login_required, current_user
+from flask_security.utils import encrypt_password
 from flask_admin import helpers as admin_helpers
 
 from flask.ext.mongoengine import MongoEngine
@@ -31,10 +32,10 @@ security = Security(app, user_datastore)
 
 @app.before_first_request
 def create_users():
-    user_datastore.find_or_create_user(email='user1', password='password')
+    user_datastore.create_user(email='user1', password=encrypt_password('password'))
 
     admin_role = user_datastore.find_or_create_role(name='role1')
-    admin_user = user_datastore.find_or_create_user(email='admin1', password='password')
+    admin_user = user_datastore.create_user(email='admin1', password=encrypt_password('password'))
     user_datastore.add_role_to_user(admin_user, admin_role)
     admin_user.save()
 
