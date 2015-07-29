@@ -1,5 +1,8 @@
 from flask import Flask, url_for, redirect, render_template, request
-from flask_mongoengine import MongoEngine
+from models.user import User, Role
+from flask.ext.security import Security, MongoEngineUserDatastore, login_required
+
+from flask.ext.mongoengine import MongoEngine
 
 from wtforms import form, fields, validators
 
@@ -19,31 +22,17 @@ app.config['MONGODB_SETTINGS'] = {'DB': 'test'}
 db = MongoEngine()
 db.init_app(app)
 
+user_datastore = MongoEngineUserDatastore(db, User, Role)
+security = Security(app, user_datastore)
 
-# Create user model. For simplicity, it will store passwords in plain text.
-# Obviously that's not right thing to do in real world application.
-class User(db.Document):
-    login = db.StringField(max_length=80, unique=True)
-    email = db.StringField(max_length=120)
-    password = db.StringField(max_length=64)
+@app.before_first_request
+def create_user():
+    user_datastore.create_user(email='user1', password='password')
 
-    # Flask-Login integration
-    def is_authenticated(self):
-        return True
-
-    def is_active(self):
-        return True
-
-    def is_anonymous(self):
-        return False
-
-    def get_id(self):
-        return str(self.id)
-
-    # Required for administrative interface
-    def __unicode__(self):
-        return self.login
-
+    admin_role = user_datastore.create_role(name='role1')
+    admin_user = user_datastore.create_user(email='admin1', password='password')
+    user_datastore.add_role_to_user(admin_user, admin_role)
+    admin_user.save()
 
 # Define login and registration forms (for flask-login)
 class LoginForm(form.Form):

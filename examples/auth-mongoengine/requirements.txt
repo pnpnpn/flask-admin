@@ -2,3 +2,4 @@ Flask
 Flask-Admin
 flask-mongoengine
 Flask-Login
+flask-security
