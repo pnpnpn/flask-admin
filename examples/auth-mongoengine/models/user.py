@@ -13,3 +13,20 @@ class User(FDocument, UserMixin):
     roles = ListField(ReferenceField(Role), default=[])
     active = BooleanField(default=True)
     confirmed_at = DateTimeField()
+
+    ## Flask-Login integration
+    #def is_authenticated(self):
+    #    return True
+
+    #def is_active(self):
+    #    return True
+
+    #def is_anonymous(self):
+    #    return False
+
+    #def get_id(self):
+    #    return str(self.id)
+
+    ## Required for administrative interface
+    #def __unicode__(self):
+    #    return self.email

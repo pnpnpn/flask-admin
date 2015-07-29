@@ -1,13 +1,13 @@
 from flask import Flask, url_for, redirect, render_template, request
 from models.user import User, Role
-from flask.ext.security import Security, MongoEngineUserDatastore, login_required
+from flask.ext.security import Security, MongoEngineUserDatastore, login_required, current_user
 
 from flask.ext.mongoengine import MongoEngine
 
 from wtforms import form, fields, validators
 
-import flask_admin as admin
-import flask_login as login
+import flask_admin
+#import flask_login as login
 from flask_admin.contrib.mongoengine import ModelView
 from flask_admin import helpers
 
@@ -19,20 +19,21 @@ app.config['SECRET_KEY'] = '123456790'
 
 # MongoDB settings
 app.config['MONGODB_SETTINGS'] = {'DB': 'test'}
+app.config['DEBUG'] = True
 db = MongoEngine()
 db.init_app(app)
 
 user_datastore = MongoEngineUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
-@app.before_first_request
-def create_user():
-    user_datastore.create_user(email='user1', password='password')
-
-    admin_role = user_datastore.create_role(name='role1')
-    admin_user = user_datastore.create_user(email='admin1', password='password')
-    user_datastore.add_role_to_user(admin_user, admin_role)
-    admin_user.save()
+#@app.before_first_request
+#def create_user():
+#    user_datastore.create_user(email='user1', password='password')
+#
+#    admin_role = user_datastore.create_role(name='role1')
+#    admin_user = user_datastore.create_user(email='admin1', password='password')
+#    user_datastore.add_role_to_user(admin_user, admin_role)
+#    admin_user.save()
 
 # Define login and registration forms (for flask-login)
 class LoginForm(form.Form):
@@ -49,7 +50,7 @@ class LoginForm(form.Form):
             raise validators.ValidationError('Invalid password')
 
     def get_user(self):
-        return User.objects(login=self.login.data).first()
+        return User.objects(email=self.login.data).first()
 
 
 class RegistrationForm(form.Form):
@@ -58,37 +59,37 @@ class RegistrationForm(form.Form):
     password = fields.PasswordField(validators=[validators.required()])
 
     def validate_login(self, field):
-        if User.objects(login=self.login.data):
+        if User.objects(email=self.login.data):
             raise validators.ValidationError('Duplicate username')
 
 
 # Initialize flask-login
-def init_login():
-    login_manager = login.LoginManager()
-    login_manager.setup_app(app)
-
-    # Create user loader function
-    @login_manager.user_loader
-    def load_user(user_id):
-        return User.objects(id=user_id).first()
-
+#def init_login():
+#    login_manager = login.LoginManager()
+#    login_manager.setup_app(app)
+#
+#    # Create user loader function
+#    @login_manager.user_loader
+#    def load_user(user_id):
+#        return User.objects(id=user_id).first()
+#
 
 # Create customized model view class
 class MyModelView(ModelView):
     def is_accessible(self):
-        return login.current_user.is_authenticated()
+        return current_user.is_authenticated()
 
 
 # Create customized index view class
-class MyAdminIndexView(admin.AdminIndexView):
+class MyAdminIndexView(flask_admin.AdminIndexView):
     def is_accessible(self):
-        return login.current_user.is_authenticated()
+        return current_user.is_authenticated()
 
 
 # Flask views
 @app.route('/')
 def index():
-    return render_template('index.html', user=login.current_user)
+    return render_template('index.html', user=current_user)
 
 
 @app.route('/login/', methods=('GET', 'POST'))
@@ -124,10 +125,10 @@ def logout_view():
 
 if __name__ == '__main__':
     # Initialize flask-login
-    init_login()
+    #init_login()
 
     # Create admin
-    admin = admin.Admin(app, 'Example: Auth-Mongo', index_view=MyAdminIndexView())
+    admin = flask_admin.Admin(app, 'Example: Auth-Mongo', index_view=MyAdminIndexView())
 
     # Add view
     admin.add_view(MyModelView(User))
