@@ -2,10 +2,10 @@
     <body>
         <div>
             {% if user and user.is_authenticated() %}
-                Hello {{ user.login }}! <a href="{{ url_for('logout_view') }}">Logout</a>
+                Hello {{ user.email }}! <a href="{{ url_for('security.logout') }}">Logout</a>
             {% else %}
                 Welcome anonymous user!
-                <a href="{{ url_for('login_view') }}">Login</a>&nbsp;<a href="{{ url_for('register_view') }}">Register</a>
+                <a href="{{ url_for('security.login') }}">Login</a>&nbsp;<a href="{{ url_for('security.register') }}">Register</a>
             {% endif %}
         </div>
         <div>
