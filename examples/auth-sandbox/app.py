@@ -29,19 +29,24 @@ db.init_app(app)
 user_datastore = MongoEngineUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
-#@app.before_first_request
-#def create_user():
-#    user_datastore.create_user(email='user1', password='password')
-#
-#    admin_role = user_datastore.create_role(name='role1')
-#    admin_user = user_datastore.create_user(email='admin1', password='password')
-#    user_datastore.add_role_to_user(admin_user, admin_role)
-#    admin_user.save()
+@app.before_first_request
+def create_users():
+    user_datastore.find_or_create_user(email='user1', password='password')
+
+    admin_role = user_datastore.find_or_create_role(name='role1')
+    admin_user = user_datastore.find_or_create_user(email='admin1', password='password')
+    user_datastore.add_role_to_user(admin_user, admin_role)
+    admin_user.save()
 
 # Create customized model view class
 class MyModelView(ModelView):
     def is_accessible(self):
-        return current_user.is_authenticated()
+        if not current_user.is_active() or not current_user.is_authenticated():
+            return False
+
+        if current_user.has_role('role1'):
+            return True
+        return False
 
 # Flask views
 @app.route('/')
